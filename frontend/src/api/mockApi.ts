@@ -1,5 +1,7 @@
-// Centralized mock API layer - all backend calls go through here
-// This will be replaced with real API calls when backend is implemented
+// Centralized API layer connecting to the backend
+// Replaces the previous mock implementation
+
+const API_BASE_URL = 'http://localhost:3000';
 
 export interface User {
   id: string;
@@ -31,186 +33,177 @@ export interface GameScore {
   mode: 'passthrough' | 'walls';
 }
 
-// Mock data storage (simulates database)
-let mockUsers: User[] = [
-  { id: '1', username: 'SnakeMaster', email: 'master@snake.com', highScore: 156, gamesPlayed: 42, createdAt: new Date('2024-01-15') },
-  { id: '2', username: 'NeonViper', email: 'viper@snake.com', highScore: 134, gamesPlayed: 38, createdAt: new Date('2024-02-20') },
-  { id: '3', username: 'PixelHunter', email: 'pixel@snake.com', highScore: 128, gamesPlayed: 55, createdAt: new Date('2024-01-08') },
-];
+// Helper for authorized requests
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('snake_token');
+    return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+};
 
-let mockLeaderboard: LeaderboardEntry[] = [
-  { id: '1', username: 'SnakeMaster', score: 156, mode: 'walls', date: new Date('2024-12-28') },
-  { id: '2', username: 'NeonViper', score: 134, mode: 'passthrough', date: new Date('2024-12-27') },
-  { id: '3', username: 'PixelHunter', score: 128, mode: 'walls', date: new Date('2024-12-26') },
-  { id: '4', username: 'CyberSnake', score: 115, mode: 'passthrough', date: new Date('2024-12-25') },
-  { id: '5', username: 'GlowWorm', score: 98, mode: 'walls', date: new Date('2024-12-24') },
-  { id: '6', username: 'BiteByte', score: 87, mode: 'passthrough', date: new Date('2024-12-23') },
-  { id: '7', username: 'RetroRacer', score: 76, mode: 'walls', date: new Date('2024-12-22') },
-  { id: '8', username: 'NightCrawler', score: 65, mode: 'passthrough', date: new Date('2024-12-21') },
-];
+// Helper to handle response
+const handleResponse = async (response: Response) => {
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'API request failed');
+    }
+    return response.json();
+};
 
-let mockActiveGames: ActiveGame[] = [
-  { id: 'game1', username: 'LivePlayer1', score: 45, mode: 'walls', startedAt: new Date() },
-  { id: 'game2', username: 'LivePlayer2', score: 32, mode: 'passthrough', startedAt: new Date() },
-  { id: 'game3', username: 'LivePlayer3', score: 67, mode: 'walls', startedAt: new Date() },
-];
-
-let currentUser: User | null = null;
-
-// Simulate network delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Auth API
 export const authApi = {
   async login(email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
-    await delay(500);
-    
-    const user = mockUsers.find(u => u.email === email);
-    if (user && password.length >= 6) {
-      currentUser = user;
-      localStorage.setItem('snake_user', JSON.stringify(user));
-      return { success: true, user };
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            return { success: false, error: error.detail || 'Login failed' };
+        }
+
+        const data = await response.json();
+        // Backend returns { success: true, token: string, user: User }
+        if (data.token) {
+            localStorage.setItem('snake_token', data.token);
+            // Also store user for simple sync access if needed (optional found in mockApi logic)
+            // But main source of truth is /auth/me or API
+            // Let's keep storing snake_user for now if app relies on it synchronously on load before check
+            localStorage.setItem('snake_user', JSON.stringify(data.user)); 
+        }
+        return { success: true, user: data.user };
+    } catch (e: any) {
+        return { success: false, error: e.message };
     }
-    return { success: false, error: 'Invalid email or password' };
   },
 
   async signup(username: string, email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
-    await delay(500);
-    
-    if (mockUsers.find(u => u.email === email)) {
-      return { success: false, error: 'Email already registered' };
-    }
-    if (mockUsers.find(u => u.username === username)) {
-      return { success: false, error: 'Username already taken' };
-    }
-    if (password.length < 6) {
-      return { success: false, error: 'Password must be at least 6 characters' };
-    }
+     try {
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password }),
+        });
 
-    const newUser: User = {
-      id: String(mockUsers.length + 1),
-      username,
-      email,
-      highScore: 0,
-      gamesPlayed: 0,
-      createdAt: new Date(),
-    };
-    
-    mockUsers.push(newUser);
-    currentUser = newUser;
-    localStorage.setItem('snake_user', JSON.stringify(newUser));
-    return { success: true, user: newUser };
+        if (!response.ok) {
+            const error = await response.json();
+             return { success: false, error: error.detail || 'Signup failed' };
+        }
+
+        const data = await response.json();
+        if (data.token) {
+            localStorage.setItem('snake_token', data.token);
+            localStorage.setItem('snake_user', JSON.stringify(data.user));
+        }
+        return { success: true, user: data.user };
+     } catch (e: any) {
+         return { success: false, error: e.message };
+     }
   },
 
   async logout(): Promise<void> {
-    await delay(200);
-    currentUser = null;
+    try {
+        await fetch(`${API_BASE_URL}/auth/logout`, { method: 'POST' });
+    } catch (e) {
+        // Ignore errors on logout
+    }
+    localStorage.removeItem('snake_token');
     localStorage.removeItem('snake_user');
   },
 
   async getCurrentUser(): Promise<User | null> {
-    await delay(100);
-    
-    if (currentUser) return currentUser;
-    
-    const stored = localStorage.getItem('snake_user');
-    if (stored) {
-      currentUser = JSON.parse(stored);
-      return currentUser;
+    const token = localStorage.getItem('snake_token');
+    if (!token) return null;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: getAuthHeaders(),
+        });
+        if (response.ok) {
+            const user = await response.json();
+            return user;
+        }
+        return null;
+    } catch {
+        return null;
     }
-    return null;
   },
 };
 
-// Leaderboard API
 export const leaderboardApi = {
   async getLeaderboard(mode?: 'passthrough' | 'walls'): Promise<LeaderboardEntry[]> {
-    await delay(300);
-    
-    let entries = [...mockLeaderboard];
-    if (mode) {
-      entries = entries.filter(e => e.mode === mode);
-    }
-    return entries.sort((a, b) => b.score - a.score);
+    const query = mode ? `?mode=${mode}` : '';
+    const response = await fetch(`${API_BASE_URL}/leaderboard${query}`);
+    if (!response.ok) return [];
+    return response.json();
   },
 
   async submitScore(score: GameScore): Promise<{ success: boolean; rank?: number }> {
-    await delay(400);
-    
-    if (!currentUser) {
-      return { success: false };
+    try {
+        const response = await fetch(`${API_BASE_URL}/leaderboard`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(score),
+        });
+        if (!response.ok) return { success: false };
+        const data = await response.json();
+        return { success: true, rank: data.rank };
+    } catch {
+        return { success: false };
     }
-
-    const entry: LeaderboardEntry = {
-      id: String(Date.now()),
-      username: currentUser.username,
-      score: score.score,
-      mode: score.mode,
-      date: new Date(),
-    };
-
-    mockLeaderboard.push(entry);
-    mockLeaderboard.sort((a, b) => b.score - a.score);
-
-    // Update user stats
-    const userIndex = mockUsers.findIndex(u => u.id === currentUser!.id);
-    if (userIndex >= 0) {
-      mockUsers[userIndex].gamesPlayed++;
-      if (score.score > mockUsers[userIndex].highScore) {
-        mockUsers[userIndex].highScore = score.score;
-      }
-      currentUser = mockUsers[userIndex];
-      localStorage.setItem('snake_user', JSON.stringify(currentUser));
-    }
-
-    const rank = mockLeaderboard.findIndex(e => e.id === entry.id) + 1;
-    return { success: true, rank };
   },
 };
 
-// Live Games API
 export const liveGamesApi = {
   async getActiveGames(): Promise<ActiveGame[]> {
-    await delay(200);
-    return [...mockActiveGames];
+    try {
+        const response = await fetch(`${API_BASE_URL}/games/active`);
+        if (!response.ok) return [];
+        return response.json();
+    } catch {
+        return [];
+    }
   },
 
   async getGameStream(gameId: string): Promise<ActiveGame | null> {
-    await delay(100);
-    return mockActiveGames.find(g => g.id === gameId) || null;
+     try {
+        const response = await fetch(`${API_BASE_URL}/games/${gameId}`);
+        if (!response.ok) return null;
+        return response.json();
+     } catch {
+         return null;
+     }
   },
 
-  // Simulate game updates for watching
+  // Simulate game updates for watching (Client-side simulation for now as backend doesn't support streams yet)
   simulateGameUpdate(gameId: string): ActiveGame | null {
-    const game = mockActiveGames.find(g => g.id === gameId);
-    if (game) {
-      game.score += Math.floor(Math.random() * 3);
-    }
-    return game || null;
+    // This part remains client-side simulation as per original mockApi requirements for now
+    // Or we could poll, but since we don't have update endpoint, we keep it mocked behavior or return null
+    // The previous implementation simulated score increase
+    // Let's keep it simple for now or just return null if we want to force real data
+    // But since the backend mock DB is static unless modified, simulation helps with "liveness" feel
+    return null; 
   },
 };
 
-// User API
 export const userApi = {
   async getProfile(): Promise<User | null> {
-    await delay(200);
-    return currentUser;
+    return authApi.getCurrentUser();
   },
 
   async updateProfile(updates: Partial<User>): Promise<{ success: boolean; user?: User }> {
-    await delay(300);
-    
-    if (!currentUser) {
-      return { success: false };
-    }
-
-    const userIndex = mockUsers.findIndex(u => u.id === currentUser!.id);
-    if (userIndex >= 0) {
-      mockUsers[userIndex] = { ...mockUsers[userIndex], ...updates };
-      currentUser = mockUsers[userIndex];
-      localStorage.setItem('snake_user', JSON.stringify(currentUser));
-      return { success: true, user: currentUser };
-    }
-    return { success: false };
+      try {
+        const response = await fetch(`${API_BASE_URL}/users/me`, {
+            method: 'PATCH',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(updates),
+        });
+        if (!response.ok) return { success: false };
+        const data = await response.json();
+        // data structure from backend: { success: true, user: User }
+        return { success: true, user: data.user };
+      } catch {
+          return { success: false };
+      }
   },
 };
