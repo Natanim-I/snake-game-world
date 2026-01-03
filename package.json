@@ -1,0 +1,27 @@
+{
+  "name": "snake-game-world",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:backend": "cd backend && make run",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Natanim-I/snake-game-world.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Natanim-I/snake-game-world/issues"
+  },
+  "homepage": "https://github.com/Natanim-I/snake-game-world#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

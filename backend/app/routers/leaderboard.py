@@ -14,8 +14,6 @@ async def get_leaderboard(mode: Optional[str] = Query(None, pattern="^(passthrou
     return db.get_leaderboard(mode)
 
 @router.post("", response_model=ScoreResponse)
-async def submit_score(score: GameScore, token=Depends(security)):
-    # In real app, get user from token. Mock: use User 1
-    user_id = '1' 
-    rank = db.submit_score(user_id, score)
+async def submit_score(score: GameScore, user=Depends(get_me)):
+    rank = db.submit_score(user.id, score)
     return ScoreResponse(success=True, rank=rank)

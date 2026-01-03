@@ -43,7 +43,11 @@ const getAuthHeaders = () => {
 const handleResponse = async (response: Response) => {
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'API request failed');
+        let errorMessage = errorData.detail || 'API request failed';
+        if (typeof errorMessage !== 'string') {
+            errorMessage = JSON.stringify(errorMessage);
+        }
+        throw new Error(errorMessage);
     }
     return response.json();
 };
@@ -59,7 +63,13 @@ export const authApi = {
         
         if (!response.ok) {
             const error = await response.json();
-            return { success: false, error: error.detail || 'Login failed' };
+            let errorMessage = error.detail || 'Login failed';
+            if (typeof errorMessage !== 'string') {
+                errorMessage = Array.isArray(errorMessage) 
+                    ? errorMessage.map((e: any) => e.msg).join(', ') 
+                    : JSON.stringify(errorMessage);
+            }
+            return { success: false, error: errorMessage };
         }
 
         const data = await response.json();
@@ -87,7 +97,13 @@ export const authApi = {
 
         if (!response.ok) {
             const error = await response.json();
-             return { success: false, error: error.detail || 'Signup failed' };
+            let errorMessage = error.detail || 'Signup failed';
+            if (typeof errorMessage !== 'string') {
+                errorMessage = Array.isArray(errorMessage) 
+                    ? errorMessage.map((e: any) => e.msg).join(', ') 
+                    : JSON.stringify(errorMessage);
+            }
+            return { success: false, error: errorMessage };
         }
 
         const data = await response.json();
@@ -159,7 +175,11 @@ export const liveGamesApi = {
     try {
         const response = await fetch(`${API_BASE_URL}/games/active`);
         if (!response.ok) return [];
-        return response.json();
+        const data = await response.json();
+        return data.map((game: any) => ({
+            ...game,
+            startedAt: new Date(game.startedAt)
+        }));
     } catch {
         return [];
     }
@@ -169,7 +189,11 @@ export const liveGamesApi = {
      try {
         const response = await fetch(`${API_BASE_URL}/games/${gameId}`);
         if (!response.ok) return null;
-        return response.json();
+        const data = await response.json();
+        return {
+            ...data,
+            startedAt: new Date(data.startedAt)
+        };
      } catch {
          return null;
      }

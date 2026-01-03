@@ -18,6 +18,7 @@ async def login(credentials: UserLogin):
     
     # Mock token generation
     token = str(uuid.uuid4())
+    db.store_token(token, user.id)
     return AuthResponse(success=True, token=token, user=user)
 
 @router.post("/register", status_code=201, response_model=AuthResponse)
@@ -29,6 +30,7 @@ async def register(user_data: UserCreate):
     
     new_user = db.create_user(user_data.username, user_data.email, user_data.password)
     token = str(uuid.uuid4())
+    db.store_token(token, new_user.id)
     return AuthResponse(success=True, token=token, user=new_user)
 
 @router.post("/logout")
@@ -40,13 +42,8 @@ security = HTTPBearer()
 
 @router.get("/me", response_model=User)
 async def get_me(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    # In this mock, we accept any token and return the "SnakeMaster" user for simplicity 
-    # unless we want to encode user ID in token.
-    # Let's encode user ID in token simply: "token-USERID"
     token = credentials.credentials
-    # For testing purposes, if token is random UUID, we might default to user 1
-    # Or strict implementation:
-    user = db.get_user_by_id('1') # Default to main user for dev/test
+    user = db.get_user_by_token(token)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return user

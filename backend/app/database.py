@@ -12,6 +12,7 @@ class MockDatabase:
             cls._instance.users = []
             cls._instance.leaderboard = []
             cls._instance.active_games = []
+            cls._instance.tokens = {} # Map token -> user_id
             cls._instance.initialize_mock_data()
         return cls._instance
 
@@ -64,6 +65,18 @@ class MockDatabase:
             ActiveGame(id='game3', username='RetroGamer', score=120, mode='walls', startedAt=datetime.now()),
             ActiveGame(id='game4', username='SpeedDemon', score=10, mode='passthrough', startedAt=datetime.now()),
         ]
+
+        # Sample Tokens (for initial users if needed, though login generates them)
+        # self.tokens = {} 
+
+    def store_token(self, token: str, user_id: str):
+        self.tokens[token] = user_id
+
+    def get_user_by_token(self, token: str) -> Optional[User]:
+        user_id = self.tokens.get(token)
+        if user_id:
+            return self.get_user_by_id(user_id)
+        return None
 
     # User Methods
     def get_user_by_email(self, email: str) -> Optional[User]:
