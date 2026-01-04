@@ -11,9 +11,10 @@ router = APIRouter(
 
 @router.get("", response_model=List[LeaderboardEntry])
 async def get_leaderboard(mode: Optional[str] = Query(None, pattern="^(passthrough|walls)$")):
-    return db.get_leaderboard(mode)
+    return await db.get_leaderboard(mode)
 
 @router.post("", response_model=ScoreResponse)
 async def submit_score(score: GameScore, user=Depends(get_me)):
-    rank = db.submit_score(user.id, score)
+    rank = await db.submit_score(user.id, score)
     return ScoreResponse(success=True, rank=rank)
+

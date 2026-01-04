@@ -1,4 +1,4 @@
-.PHONY: install run test clean
+.PHONY: install run test clean seed db-reset
 
 install:
 	uv sync
@@ -15,3 +15,11 @@ clean:
 	rm -rf app/__pycache__
 	rm -rf tests/__pycache__
 	rm -rf .pytest_cache
+
+seed:
+	uv run python -m app.seed_db
+
+db-reset:
+	rm -f snake_game.db
+	uv run python -m app.seed_db
+

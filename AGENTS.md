@@ -12,4 +12,4 @@ Useful Commands
     uv run python <PYTHON-FILE>
 
     #Commit code to git
-    reguraly commit code to git
+    regularly commit code to git
