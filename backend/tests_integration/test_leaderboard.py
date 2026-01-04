@@ -1,6 +1,6 @@
 """Integration tests for leaderboard endpoints"""
 import pytest
-from datetime import datetime
+from datetime import datetime, UTC
 from app.db.models import LeaderboardEntryModel
 
 @pytest.mark.asyncio
@@ -23,21 +23,21 @@ async def test_get_leaderboard_with_entries(client, db_session):
             username="player1",
             score=150,
             mode="walls",
-            date=datetime.utcnow()
+            date=datetime.now(UTC)
         ),
         LeaderboardEntryModel(
             id="entry2",
             username="player2",
             score=200,
             mode="walls",
-            date=datetime.utcnow()
+            date=datetime.now(UTC)
         ),
         LeaderboardEntryModel(
             id="entry3",
             username="player3",
             score=100,
             mode="passthrough",
-            date=datetime.utcnow()
+            date=datetime.now(UTC)
         ),
     ]
     
@@ -64,14 +64,14 @@ async def test_get_leaderboard_filter_by_mode(client, db_session):
             username="player1",
             score=150,
             mode="walls",
-            date=datetime.utcnow()
+            date=datetime.now(UTC)
         ),
         LeaderboardEntryModel(
             id="entry2",
             username="player2",
             score=200,
             mode="passthrough",
-            date=datetime.utcnow()
+            date=datetime.now(UTC)
         ),
     ]
     
@@ -156,14 +156,14 @@ async def test_submit_score_rank_calculation(client, auth_token, db_session):
             username="player1",
             score=500,
             mode="walls",
-            date=datetime.utcnow()
+            date=datetime.now(UTC)
         ),
         LeaderboardEntryModel(
             id="entry2",
             username="player2",
             score=300,
             mode="walls",
-            date=datetime.utcnow()
+            date=datetime.now(UTC)
         ),
     ]
     

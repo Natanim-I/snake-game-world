@@ -3,7 +3,7 @@ Seed script to populate the database with initial data.
 Run with: uv run python -m app.seed_db
 """
 import asyncio
-from datetime import datetime
+from datetime import datetime, UTC
 from app.db.session import AsyncSessionLocal
 from app.db.models import UserModel, LeaderboardEntryModel, ActiveGameModel
 import hashlib
@@ -62,10 +62,10 @@ async def seed_database():
         
         # Sample Active Games
         active_games = [
-            ActiveGameModel(id='game1', username='LivePlayer1', score=45, mode='walls', started_at=datetime.utcnow()),
-            ActiveGameModel(id='game2', username='LivePlayer2', score=32, mode='passthrough', started_at=datetime.utcnow()),
-            ActiveGameModel(id='game3', username='RetroGamer', score=120, mode='walls', started_at=datetime.utcnow()),
-            ActiveGameModel(id='game4', username='SpeedDemon', score=10, mode='passthrough', started_at=datetime.utcnow()),
+            ActiveGameModel(id='game1', username='LivePlayer1', score=45, mode='walls', started_at=datetime.now(UTC)),
+            ActiveGameModel(id='game2', username='LivePlayer2', score=32, mode='passthrough', started_at=datetime.now(UTC)),
+            ActiveGameModel(id='game3', username='RetroGamer', score=120, mode='walls', started_at=datetime.now(UTC)),
+            ActiveGameModel(id='game4', username='SpeedDemon', score=10, mode='passthrough', started_at=datetime.now(UTC)),
         ]
         
         for game in active_games:

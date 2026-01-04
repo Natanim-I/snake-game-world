@@ -1,6 +1,6 @@
 """Integration tests for game endpoints"""
 import pytest
-from datetime import datetime
+from datetime import datetime, UTC
 from app.db.models import ActiveGameModel
 
 @pytest.mark.asyncio
@@ -22,14 +22,14 @@ async def test_get_active_games_with_games(client, db_session):
             username="player1",
             score=50,
             mode="walls",
-            started_at=datetime.utcnow()
+            started_at=datetime.now(UTC)
         ),
         ActiveGameModel(
             id="game2",
             username="player2",
             score=75,
             mode="passthrough",
-            started_at=datetime.utcnow()
+            started_at=datetime.now(UTC)
         ),
     ]
     
@@ -53,7 +53,7 @@ async def test_get_game_by_id(client, db_session):
         username="testplayer",
         score=100,
         mode="walls",
-        started_at=datetime.utcnow()
+        started_at=datetime.now(UTC)
     )
     db_session.add(game)
     await db_session.commit()

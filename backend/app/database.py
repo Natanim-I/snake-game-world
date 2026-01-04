@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List, Optional
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -120,7 +120,7 @@ class DatabaseManager:
                 password_hash=self._hash_password(password),
                 high_score=0,
                 games_played=0,
-                created_at=datetime.utcnow()
+                created_at=datetime.now(UTC)
             )
             session.add(user_model)
             await session.commit()
@@ -199,7 +199,7 @@ class DatabaseManager:
                 username=user.username,
                 score=score_data.score,
                 mode=score_data.mode,
-                date=datetime.utcnow()
+                date=datetime.now(UTC)
             )
             session.add(entry)
             await session.commit()
