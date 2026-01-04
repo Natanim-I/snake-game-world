@@ -21,7 +21,7 @@ class UserModel(Base):
     password_hash: Mapped[str] = mapped_column(String, nullable=False)
     high_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     games_played: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 class LeaderboardEntryModel(Base):
     """Leaderboard entry model"""
@@ -31,7 +31,7 @@ class LeaderboardEntryModel(Base):
     username: Mapped[str] = mapped_column(String, nullable=False, index=True)
     score: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     mode: Mapped[str] = mapped_column(SQLEnum(GameMode), nullable=False, index=True)
-    date: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True)
 
 class ActiveGameModel(Base):
     """Active game session model"""
@@ -41,7 +41,7 @@ class ActiveGameModel(Base):
     username: Mapped[str] = mapped_column(String, nullable=False, index=True)
     score: Mapped[int] = mapped_column(Integer, nullable=False)
     mode: Mapped[str] = mapped_column(SQLEnum(GameMode), nullable=False)
-    started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 class TokenModel(Base):
     """Authentication token model"""
@@ -49,4 +49,5 @@ class TokenModel(Base):
     
     token: Mapped[str] = mapped_column(String, primary_key=True, index=True)
     user_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
