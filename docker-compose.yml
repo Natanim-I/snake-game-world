@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: snake-game-db
+    environment:
+      POSTGRES_DB: snake_game
+      POSTGRES_USER: snake_user
+      POSTGRES_PASSWORD: snake_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U snake_user -d snake_game"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - snake-network
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: snake-game-backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://snake_user:snake_password@postgres:5432/snake_game
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - snake-network
+    restart: unless-stopped
+
+  # Frontend with Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: snake-game-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - snake-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  snake-network:
+    driver: bridge

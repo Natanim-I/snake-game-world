@@ -1,7 +1,10 @@
 // Centralized API layer connecting to the backend
 // Replaces the previous mock implementation
 
-const API_BASE_URL = 'http://localhost:3000';
+// Use relative path for Docker deployment with Nginx proxy
+// In development, this will be http://localhost:3000
+// In production (Docker), Nginx proxies /api/* to backend
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export interface User {
   id: string;
