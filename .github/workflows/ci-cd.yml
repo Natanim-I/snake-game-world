@@ -7,33 +7,39 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
-    name: Run Tests
+  test-backend:
+    name: Backend Tests
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
 
-      # Backend Tests
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-path: backend/uv.lock
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version-file: "backend/pyproject.toml"
 
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
-
-      - name: Install backend dependencies
+      - name: Install dependencies
         run: |
           cd backend
-          $HOME/.cargo/bin/uv sync --frozen
+          uv sync --frozen
 
-      - name: Run backend tests
+      - name: Run tests
         run: |
           cd backend
-          $HOME/.cargo/bin/uv run pytest
+          uv run pytest
 
-      # Frontend Tests
+  test-frontend:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -41,22 +47,21 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install frontend dependencies
+      - name: Install dependencies
         run: |
           cd frontend
           npm install
 
-      - name: Run frontend tests
+      - name: Run tests
         run: |
           cd frontend
           npm test
 
   deploy:
     name: Deploy to Render
-    needs: test
+    needs: [test-backend, test-frontend]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    
     steps:
       - name: Trigger Render Deploy Hook
         env:
