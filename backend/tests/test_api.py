@@ -10,13 +10,18 @@ from app.db.base import Base
 from app.db.models import UserModel, LeaderboardEntryModel, ActiveGameModel
 from app import database
 
+from sqlalchemy.pool import StaticPool
+from app.db import session as db_session_module
+
 # Test database URL
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
-# Create test engine
+# Create test engine with StaticPool for in-memory SQLite
 test_engine = create_async_engine(
     TEST_DATABASE_URL,
     echo=False,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
 )
 
 # Create test session factory
@@ -43,20 +48,16 @@ async def db_session():
 @pytest_asyncio.fixture
 async def client(db_session):
     """Create a test client with overridden database dependency"""
-    # Patch the DatabaseManager to use test session
-    async def mock_get_session(self):
-        return TestSessionLocal()
-    
-    # Patch the _get_session method
-    database.DatabaseManager._get_session = mock_get_session
-    
-    # Also need to patch AsyncSessionLocal in database.py
-    with patch('app.database.AsyncSessionLocal', TestSessionLocal):
+    # Patch the module-level engine and session factory
+    with patch.object(db_session_module, 'engine', test_engine), \
+         patch.object(db_session_module, 'AsyncSessionLocal', TestSessionLocal), \
+         patch.object(database, 'AsyncSessionLocal', TestSessionLocal):
         async with AsyncClient(
             transport=ASGITransport(app=app),
             base_url="http://test"
         ) as ac:
             yield ac
+
 
 @pytest_asyncio.fixture
 async def test_user(db_session):
