@@ -1,0 +1,21 @@
+services:
+  # The unified Snake Game application
+  - type: web
+    name: snake-game-world
+    env: docker
+    plan: free # Use 'free' for demo/hobby
+    region: oregon # Choose your closest region
+    dockerContext: .
+    dockerfilePath: Dockerfile
+    healthCheckPath: /api
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: snake-db
+          property: connectionString
+
+# Managed PostgreSQL database
+databases:
+  - name: snake-db
+    plan: free # Free tier database (expires after 90 days on Render)
+    region: oregon

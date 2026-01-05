@@ -40,4 +40,6 @@ ENV PYTHONUNBUFFERED=1
 ENV DATABASE_URL=postgresql+asyncpg://snake_user:snake_password@postgres:5432/snake_game
 
 # Run the application
-CMD ["/uv/bin/uv", "run", "python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "3000"]
+# Use shell form to allow expansion of $PORT environment variable
+CMD ["sh", "-c", "/uv/bin/uv run python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-3000}"]
+
