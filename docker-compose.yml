@@ -19,12 +19,12 @@ services:
     networks:
       - snake-network
 
-  # FastAPI Backend
-  backend:
+  # Unified Snake Game App (Backend + Frontend)
+  app:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
-    container_name: snake-game-backend
+    container_name: snake-game-app
     environment:
       DATABASE_URL: postgresql+asyncpg://snake_user:snake_password@postgres:5432/snake_game
     ports:
@@ -36,20 +36,6 @@ services:
       - snake-network
     restart: unless-stopped
 
-  # Frontend with Nginx
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: snake-game-frontend
-    ports:
-      - "8080:80"
-    depends_on:
-      - backend
-    networks:
-      - snake-network
-    restart: unless-stopped
-
 volumes:
   postgres_data:
     driver: local
@@ -57,3 +43,4 @@ volumes:
 networks:
   snake-network:
     driver: bridge
+

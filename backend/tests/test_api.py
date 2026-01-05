@@ -114,14 +114,14 @@ async def active_game(db_session, test_user):
 
 @pytest.mark.asyncio
 async def test_read_main(client):
-    response = await client.get("/")
+    response = await client.get("/api")
     assert response.status_code == 200
     assert response.json() == {"message": "Welcome to Snake Game World API"}
 
 @pytest.mark.asyncio
 async def test_login_success(client, test_user):
     response = await client.post(
-        "/auth/login",
+        "/api/auth/login",
         json={"email": "test@example.com", "password": "password123"}
     )
     assert response.status_code == 200
@@ -133,14 +133,14 @@ async def test_login_success(client, test_user):
 @pytest.mark.asyncio
 async def test_login_failure(client, test_user):
     response = await client.post(
-        "/auth/login",
+        "/api/auth/login",
         json={"email": "test@example.com", "password": "wrongpassword"}
     )
     assert response.status_code == 401
 
 @pytest.mark.asyncio
 async def test_get_leaderboard(client, leaderboard_data):
-    response = await client.get("/leaderboard")
+    response = await client.get("/api/leaderboard")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
@@ -148,7 +148,7 @@ async def test_get_leaderboard(client, leaderboard_data):
 
 @pytest.mark.asyncio
 async def test_get_leaderboard_filter(client, leaderboard_data):
-    response = await client.get("/leaderboard?mode=walls")
+    response = await client.get("/api/leaderboard?mode=walls")
     assert response.status_code == 200
     data = response.json()
     assert all(entry["mode"] == "walls" for entry in data)
@@ -157,7 +157,7 @@ async def test_get_leaderboard_filter(client, leaderboard_data):
 async def test_submit_score(client, test_user):
     # First login to get a token
     login_response = await client.post(
-        "/auth/login",
+        "/api/auth/login",
         json={"email": "test@example.com", "password": "password123"}
     )
     token = login_response.json()["token"]
@@ -165,7 +165,7 @@ async def test_submit_score(client, test_user):
     headers = {"Authorization": f"Bearer {token}"}
     score_data = {"score": 200, "mode": "walls"}
     
-    response = await client.post("/leaderboard", json=score_data, headers=headers)
+    response = await client.post("/api/leaderboard", json=score_data, headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -173,26 +173,26 @@ async def test_submit_score(client, test_user):
 
 @pytest.mark.asyncio
 async def test_get_active_games(client, active_game):
-    response = await client.get("/games/active")
+    response = await client.get("/api/games/active")
     assert response.status_code == 200
     data = response.json()
     assert len(data) > 0
 
 @pytest.mark.asyncio
 async def test_get_me_unauthenticated(client):
-    response = await client.get("/auth/me")
+    response = await client.get("/api/auth/me")
     assert response.status_code == 401
 
 @pytest.mark.asyncio
 async def test_get_me_authenticated(client, test_user):
     # First login to get a token
     login_response = await client.post(
-        "/auth/login",
+        "/api/auth/login",
         json={"email": "test@example.com", "password": "password123"}
     )
     token = login_response.json()["token"]
     
-    response = await client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
+    response = await client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     data = response.json()
     assert data["email"] == "test@example.com"

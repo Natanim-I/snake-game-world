@@ -1,0 +1,16 @@
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/node_modules
+**/dist
+**/.venv
+**/.git
+**/.pytest_cache
+**/snake_game.db
+backend/static
+frontend/build
+.env
+.env.*
+!.env.example
+*.log
