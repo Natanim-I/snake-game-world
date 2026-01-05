@@ -5,7 +5,7 @@ import pytest
 async def test_update_profile_authenticated(client, auth_token, test_user, db_session):
     """Test updating user profile with authentication"""
     response = await client.patch(
-        "/users/me",
+        "/api/users/me",
         json={
             "username": "updateduser"
         },
@@ -25,7 +25,7 @@ async def test_update_profile_authenticated(client, auth_token, test_user, db_se
 async def test_update_profile_email(client, auth_token, test_user, db_session):
     """Test updating user email"""
     response = await client.patch(
-        "/users/me",
+        "/api/users/me",
         json={
             "email": "newemail@example.com"
         },
@@ -45,10 +45,11 @@ async def test_update_profile_email(client, auth_token, test_user, db_session):
 async def test_update_profile_unauthenticated(client):
     """Test updating profile without authentication"""
     response = await client.patch(
-        "/users/me",
+        "/api/users/me",
         json={
             "username": "newusername"
         }
     )
     
     assert response.status_code == 401  # HTTPBearer returns 401 when no credentials
+

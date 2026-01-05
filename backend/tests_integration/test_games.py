@@ -6,7 +6,7 @@ from app.db.models import ActiveGameModel
 @pytest.mark.asyncio
 async def test_get_active_games_empty(client):
     """Test getting active games when none exist"""
-    response = await client.get("/games/active")
+    response = await client.get("/api/games/active")
     
     assert response.status_code == 200
     data = response.json()
@@ -37,7 +37,7 @@ async def test_get_active_games_with_games(client, db_session):
         db_session.add(game)
     await db_session.commit()
     
-    response = await client.get("/games/active")
+    response = await client.get("/api/games/active")
     
     assert response.status_code == 200
     data = response.json()
@@ -58,7 +58,7 @@ async def test_get_game_by_id(client, db_session):
     db_session.add(game)
     await db_session.commit()
     
-    response = await client.get("/games/test-game-123")
+    response = await client.get("/api/games/test-game-123")
     
     assert response.status_code == 200
     data = response.json()
@@ -70,7 +70,8 @@ async def test_get_game_by_id(client, db_session):
 @pytest.mark.asyncio
 async def test_get_game_not_found(client):
     """Test getting a non-existent game"""
-    response = await client.get("/games/nonexistent-game")
+    response = await client.get("/api/games/nonexistent-game")
     
     assert response.status_code == 404
     assert "Game not found" in response.json()["detail"]
+

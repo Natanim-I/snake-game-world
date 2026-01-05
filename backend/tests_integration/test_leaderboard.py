@@ -6,7 +6,7 @@ from app.db.models import LeaderboardEntryModel
 @pytest.mark.asyncio
 async def test_get_leaderboard_empty(client):
     """Test getting leaderboard when empty"""
-    response = await client.get("/leaderboard")
+    response = await client.get("/api/leaderboard")
     
     assert response.status_code == 200
     data = response.json()
@@ -45,7 +45,7 @@ async def test_get_leaderboard_with_entries(client, db_session):
         db_session.add(entry)
     await db_session.commit()
     
-    response = await client.get("/leaderboard")
+    response = await client.get("/api/leaderboard")
     
     assert response.status_code == 200
     data = response.json()
@@ -80,14 +80,14 @@ async def test_get_leaderboard_filter_by_mode(client, db_session):
     await db_session.commit()
     
     # Filter by walls mode
-    response = await client.get("/leaderboard?mode=walls")
+    response = await client.get("/api/leaderboard?mode=walls")
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
     assert data[0]["mode"] == "walls"
     
     # Filter by passthrough mode
-    response = await client.get("/leaderboard?mode=passthrough")
+    response = await client.get("/api/leaderboard?mode=passthrough")
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
@@ -97,7 +97,7 @@ async def test_get_leaderboard_filter_by_mode(client, db_session):
 async def test_submit_score_authenticated(client, auth_token, test_user):
     """Test submitting a score with authentication"""
     response = await client.post(
-        "/leaderboard",
+        "/api/leaderboard",
         json={
             "score": 250,
             "mode": "walls"
@@ -114,7 +114,7 @@ async def test_submit_score_authenticated(client, auth_token, test_user):
 async def test_submit_score_unauthenticated(client):
     """Test submitting a score without authentication"""
     response = await client.post(
-        "/leaderboard",
+        "/api/leaderboard",
         json={
             "score": 250,
             "mode": "walls"
@@ -131,7 +131,7 @@ async def test_submit_score_updates_user_stats(client, auth_token, test_user, db
     
     # Submit a higher score
     response = await client.post(
-        "/leaderboard",
+        "/api/leaderboard",
         json={
             "score": 300,
             "mode": "walls"
@@ -173,7 +173,7 @@ async def test_submit_score_rank_calculation(client, auth_token, db_session):
     
     # Submit a score that should rank 2nd
     response = await client.post(
-        "/leaderboard",
+        "/api/leaderboard",
         json={
             "score": 400,
             "mode": "walls"
@@ -184,3 +184,4 @@ async def test_submit_score_rank_calculation(client, auth_token, db_session):
     assert response.status_code == 200
     data = response.json()
     assert data["rank"] == 2
+

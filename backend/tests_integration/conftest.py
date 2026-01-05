@@ -84,10 +84,11 @@ async def test_user(db_session):
 async def auth_token(client, test_user):
     """Get an authentication token for the test user"""
     response = await client.post(
-        "/auth/login",
+        "/api/auth/login",
         json={"email": "test@example.com", "password": "password123"}
     )
     assert response.status_code == 200
     data = response.json()
     return data["token"]
+
 

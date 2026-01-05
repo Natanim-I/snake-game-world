@@ -5,7 +5,7 @@ import pytest
 async def test_register_new_user(client):
     """Test user registration"""
     response = await client.post(
-        "/auth/register",
+        "/api/auth/register",
         json={
             "username": "newuser",
             "email": "newuser@example.com",
@@ -26,7 +26,7 @@ async def test_register_new_user(client):
 async def test_register_duplicate_email(client, test_user):
     """Test registration with duplicate email"""
     response = await client.post(
-        "/auth/register",
+        "/api/auth/register",
         json={
             "username": "anotheruser",
             "email": "test@example.com",  # Same as test_user
@@ -41,7 +41,7 @@ async def test_register_duplicate_email(client, test_user):
 async def test_register_duplicate_username(client, test_user):
     """Test registration with duplicate username"""
     response = await client.post(
-        "/auth/register",
+        "/api/auth/register",
         json={
             "username": "testuser",  # Same as test_user
             "email": "different@example.com",
@@ -56,7 +56,7 @@ async def test_register_duplicate_username(client, test_user):
 async def test_login_success(client, test_user):
     """Test successful login"""
     response = await client.post(
-        "/auth/login",
+        "/api/auth/login",
         json={
             "email": "test@example.com",
             "password": "password123"
@@ -74,7 +74,7 @@ async def test_login_success(client, test_user):
 async def test_login_invalid_email(client):
     """Test login with invalid email"""
     response = await client.post(
-        "/auth/login",
+        "/api/auth/login",
         json={
             "email": "nonexistent@example.com",
             "password": "password123"
@@ -88,7 +88,7 @@ async def test_login_invalid_email(client):
 async def test_login_invalid_password(client, test_user):
     """Test login with invalid password"""
     response = await client.post(
-        "/auth/login",
+        "/api/auth/login",
         json={
             "email": "test@example.com",
             "password": "wrongpassword"
@@ -102,7 +102,7 @@ async def test_login_invalid_password(client, test_user):
 async def test_get_me_authenticated(client, auth_token):
     """Test getting current user with valid token"""
     response = await client.get(
-        "/auth/me",
+        "/api/auth/me",
         headers={"Authorization": f"Bearer {auth_token}"}
     )
     
@@ -114,7 +114,7 @@ async def test_get_me_authenticated(client, auth_token):
 @pytest.mark.asyncio
 async def test_get_me_unauthenticated(client):
     """Test getting current user without token"""
-    response = await client.get("/auth/me")
+    response = await client.get("/api/auth/me")
     
     assert response.status_code == 401  # HTTPBearer returns 401 when no credentials
 
@@ -122,7 +122,7 @@ async def test_get_me_unauthenticated(client):
 async def test_get_me_invalid_token(client):
     """Test getting current user with invalid token"""
     response = await client.get(
-        "/auth/me",
+        "/api/auth/me",
         headers={"Authorization": "Bearer invalid-token"}
     )
     
@@ -132,8 +132,9 @@ async def test_get_me_invalid_token(client):
 @pytest.mark.asyncio
 async def test_logout(client):
     """Test logout endpoint"""
-    response = await client.post("/auth/logout")
+    response = await client.post("/api/auth/logout")
     
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
+
