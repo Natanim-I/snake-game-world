@@ -7,8 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  test-backend:
-    name: Backend Tests
+  test-backend-unit:
+    name: Backend Unit Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,10 +29,38 @@ jobs:
           cd backend
           uv sync --frozen
 
-      - name: Run tests
+      - name: Run unit tests
         run: |
           cd backend
-          uv run pytest -v --log-level=INFO
+          uv run pytest -v tests/ --log-level=INFO
+
+
+  test-backend-integration:
+    name: Backend Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-path: backend/uv.lock
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "backend/pyproject.toml"
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          uv sync --frozen
+
+      - name: Run integration tests
+        run: |
+          cd backend
+          uv run pytest -v tests_integration/ --log-level=INFO
 
 
   test-frontend:
@@ -60,7 +88,7 @@ jobs:
 
   deploy:
     name: Deploy to Render
-    needs: [test-backend, test-frontend]
+    needs: [test-backend-unit, test-backend-integration, test-frontend]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
