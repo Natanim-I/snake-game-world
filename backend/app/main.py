@@ -120,10 +120,10 @@ else:
 # Global 404 handler for non-GET methods or when SPA catch-all is skipped
 @app.exception_handler(404)
 async def custom_404_handler(request: Request, exc: HTTPException):
-    logger.warning(f"404 Not Found: {request.method} {request.url.path}")
+    logger.warning(f"404 Not Found: {request.method} {request.url.path} - {exc.detail}")
     return JSONResponse(
         status_code=404,
-        content={"detail": "Not Found", "path": request.url.path, "method": request.method},
+        content={"detail": exc.detail},
     )
 
 if __name__ == "__main__":
