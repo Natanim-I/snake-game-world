@@ -34,6 +34,12 @@ TestSessionLocal = async_sessionmaker(
     autoflush=False,
 )
 
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def cleanup_engine():
+    """Dispose of the engine after all tests are done to prevent hangs"""
+    yield
+    await test_engine.dispose()
+
 @pytest_asyncio.fixture
 async def db_session():
     """Create a fresh database for each test"""
