@@ -37,6 +37,7 @@ jobs:
 
   test-backend-integration:
     name: Backend Integration Tests
+    needs: [test-backend-unit, test-frontend]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
